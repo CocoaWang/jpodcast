@@ -5,7 +5,12 @@
 package com.w;
 
 import com.futurice.tantalum3.TantalumMIDlet;
+import com.futurice.tantalum3.Task;
 import com.futurice.tantalum3.log.L;
+import com.futurice.tantalum3.net.StaticWebCache;
+import com.futurice.tantalum3.net.xml.RSSItem;
+import com.futurice.tantalum3.net.xml.RSSModel;
+import com.futurice.tantalum3.rms.DataTypeHandler;
 import javax.microedition.lcdui.Command;
 import javax.microedition.lcdui.CommandListener;
 import javax.microedition.lcdui.Display;
@@ -27,12 +32,27 @@ public class JPodcast extends TantalumMIDlet implements CommandListener {
     private Command back;
     private Command next;
     private Command cmdSel;
-
+    private StaticWebCache feedCache;
+    private RSSModel rssModel;
     /**
      * Creates several screens and navigates between them.
      */
     public JPodcast() {
         super(4);
+        rssModel = new RSSModel(50);
+        feedCache = new StaticWebCache('5', new DataTypeHandler() {
+            public Object convertToUseForm(byte[] bytes) {
+                try {
+                    L.i("", bytes.toString());
+                    rssModel.setXML(bytes);
+
+                    return rssModel;
+                } catch (Exception e) {                    
+                    L.i("Error in parsing XML", rssModel.toString());
+                    return null;
+                }
+            }
+        });        
         this.manager = new DisplayManager(Display.getDisplay(this));
         this.back = new Command("Back", Command.BACK, 1);
         this.next = new Command("Next", Command.OK, 1);
@@ -54,8 +74,29 @@ public class JPodcast extends TantalumMIDlet implements CommandListener {
         this.screen3.addCommand(this.next);
     }
 
+    private void dumpItems() {
+        int s = rssModel.size();
+        for (int i=0; i < s; ++i) {
+            RSSItem it = rssModel.elementAt(i);
+            L.i("", "Item " + it.getTitle());
+            
+        }
+        
+    }
     private void startFetch(String url) {
         L.i("", "Starting to fetch");
+        final Task t = new Task() {
+
+            protected Object doInBackground(Object in) {
+                L.i("", "Fetch done!!!");
+                dumpItems();
+                return in;
+                
+                    
+            }
+            
+        };
+        feedCache.update(url, t);
 
 
     }
@@ -71,7 +112,7 @@ public class JPodcast extends TantalumMIDlet implements CommandListener {
                 L.i("", "Podcast select!");
                 // TODO Auto-generated method stub
                 app.manager.next(app.screen2);
-                startFetch("http://www.engadget.com/tag/podcasts/rss.xml");
+                startFetch("http://www.theverge.com/rss/index.xml");
 
 
             }
