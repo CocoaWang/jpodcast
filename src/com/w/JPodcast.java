@@ -76,6 +76,7 @@ public class JPodcast extends TantalumMIDlet implements CommandListener {
 
     private void dumpItems() {
         int s = rssModel.size();
+        L.i("", "Got els: " + s);
         for (int i=0; i < s; ++i) {
             RSSItem it = rssModel.elementAt(i);
             L.i("", "Item " + it.getTitle());

@@ -22,8 +22,10 @@ public class RSSModel extends XMLModel {
 
     public synchronized void startElement(final String uri, final String localName, final String qName, final Attributes attributes) throws SAXException {
         super.startElement(uri, localName, qName, attributes);
-
-        if (qName.equals("item")) {
+        
+        L.i("RSSModel", qName);
+        if (qName.equals("item") || qName.equals("entry")) {
+            L.i("RSSModel", "Adding");
             currentItem = new RSSItem();
         }
     }
@@ -54,7 +56,7 @@ public class RSSModel extends XMLModel {
     public synchronized void endElement(final String uri, final String localName, final String qName) throws SAXException {
         super.endElement(uri, localName, qName);
 
-        if (qName.equals("item")) {
+        if (qName.equals("item") || qName.equals("entry")) {
             if (items.size() < maxLength) {
                 items.addElement(currentItem);
             }
