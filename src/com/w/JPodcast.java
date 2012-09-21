@@ -34,6 +34,8 @@ public class JPodcast extends TantalumMIDlet implements CommandListener {
     private Command cmdSel;
     private StaticWebCache feedCache;
     private RSSModel rssModel;
+    private List lEpisodes;
+            
     /**
      * Creates several screens and navigates between them.
      */
@@ -64,7 +66,7 @@ public class JPodcast extends TantalumMIDlet implements CommandListener {
         this.screen1.addCommand(this.next);
 
         this.screen2 = getSreen2();
-        this.screen2.setCommandListener(this);
+        //this.screen2.setCommandListener(this);
         this.screen2.addCommand(this.back);
         this.screen2.addCommand(this.next);
 
@@ -77,9 +79,11 @@ public class JPodcast extends TantalumMIDlet implements CommandListener {
     private void dumpItems() {
         int s = rssModel.size();
         L.i("", "Got els: " + s);
+        lEpisodes.deleteAll();
         for (int i=0; i < s; ++i) {
             RSSItem it = rssModel.elementAt(i);
             L.i("", "Item " + it.getTitle());
+            lEpisodes.append(it.getTitle(), null);
             
         }
         
@@ -113,7 +117,7 @@ public class JPodcast extends TantalumMIDlet implements CommandListener {
                 L.i("", "Podcast select!");
                 // TODO Auto-generated method stub
                 app.manager.next(app.screen2);
-                startFetch("http://www.theverge.com/rss/index.xml");
+                startFetch("http://feeds.feedburner.com/TheVergeMobilePodcast");
 
 
             }
@@ -123,10 +127,27 @@ public class JPodcast extends TantalumMIDlet implements CommandListener {
     }
 
     private Displayable getSreen2() {
-        return new List("List [Screen 2]", List.IMPLICIT);
+        lEpisodes = new List("Episodes", List.IMPLICIT);
+        lEpisodes.setCommandListener(new CommandListener() {
+
+            public void commandAction(Command c, Displayable d) {
+                L.i("", "Select episode");
+                int i = lEpisodes.getSelectedIndex();
+                RSSItem it = rssModel.elementAt(i);
+                String link = it.getLink();
+                L.i("", "Link:"  + link);
+                
+                
+                
+                
+            }
+        });
+        return lEpisodes;
+                
     }
 
     private Displayable getSreen3() {
+        
         return new TextBox("Text [Screen 3]", "", 100, TextField.ANY);
     }
 
