@@ -11,6 +11,9 @@ import com.futurice.tantalum3.net.StaticWebCache;
 import com.futurice.tantalum3.net.xml.RSSItem;
 import com.futurice.tantalum3.net.xml.RSSModel;
 import com.futurice.tantalum3.rms.DataTypeHandler;
+import java.io.IOException;
+import javax.microedition.io.Connector;
+import javax.microedition.io.file.FileConnection;
 import javax.microedition.lcdui.Command;
 import javax.microedition.lcdui.CommandListener;
 import javax.microedition.lcdui.Display;
@@ -126,6 +129,22 @@ public class JPodcast extends TantalumMIDlet implements CommandListener {
 
     }
 
+    private void startDownload(String url) {
+        String initDir = System.getProperty("fileconn.dir.music");
+        int i = url.lastIndexOf('/');
+        String basename = url.substring(i+1);
+        String trg = initDir + "/" + basename;
+        L.i("", "Get to " + trg);
+        try {
+            FileConnection fc = (FileConnection) Connector.open(trg, 
+                    Connector.WRITE);
+        } catch (IOException e) {
+            L.e("", "Cannot open file", e);
+        }
+        
+        
+    }
+    
     private Displayable getSreen2() {
         lEpisodes = new List("Episodes", List.IMPLICIT);
         lEpisodes.setCommandListener(new CommandListener() {
@@ -135,7 +154,11 @@ public class JPodcast extends TantalumMIDlet implements CommandListener {
                 int i = lEpisodes.getSelectedIndex();
                 RSSItem it = rssModel.elementAt(i);
                 String link = it.getLink();
-                L.i("", "Link:"  + link);
+                String tgurl = (String) it.getOther().get("enclosure.url");
+                L.i("", "Link: "  + tgurl);
+                startDownload(tgurl);
+                
+                
                 
                 
                 

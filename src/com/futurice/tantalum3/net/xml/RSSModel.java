@@ -44,7 +44,10 @@ public class RSSModel extends XMLModel {
                         currentItem.setPubDate(chars);
                     } else if (qName.equals("media:thumbnail")) {
                         currentItem.setThumbnail((String) attributes.getValue("url"));
+                    } else if (qName.equals("enclosure")) {
+                        currentItem.setOther("enclosure.url", attributes.getValue("url"));
                     }
+                    
                 }
             }
         } catch (Exception e) {

@@ -1,6 +1,8 @@
 package com.futurice.tantalum3.net.xml;
 
+import com.futurice.tantalum3.log.L;
 import com.futurice.tantalum3.util.StringUtils;
+import java.util.Hashtable;
 import javax.microedition.lcdui.Font;
 import javax.microedition.lcdui.Image;
 
@@ -17,6 +19,7 @@ public class RSSItem {
     private String link = "";
     private String pubDate = "";
     private String thumbnail = "";
+    private Hashtable otherData = null;
     private Image thumbnailImage = null;
     private volatile boolean loadingImage = false;
     private volatile boolean newItem = true;
@@ -89,6 +92,20 @@ public class RSSItem {
 
     public void setNewItem(final boolean newItem) {
         this.newItem = newItem;
+    }
+    
+    public void setOther(final String key, final String value) {
+        if (otherData == null) {
+            otherData = new Hashtable();
+        }
+        L.i("RSSItem ", "Set " + key +" := " + value);
+        otherData.put(key, value);
+        
+        
+    }
+    
+    public Hashtable getOther() {
+        return otherData;
     }
 
     public synchronized String toString() {
