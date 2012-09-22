@@ -79,7 +79,8 @@ public class HttpStreamGetter extends Task {
 
                     if (++redirects > 5) {
                         // Too many redirects - give up.
-                        break;
+                        
+                        throw new IOException("Out of retries");
                     }
 
                     continue;
@@ -90,13 +91,14 @@ public class HttpStreamGetter extends Task {
   
             final long length = httpConnection.getLength();
             if(true) {                
-                L.i(this.getClass().getName() + " start variable length read", url);
+                L.i(this.getClass().getName() + " start variable length read " + length, url);
                 
                 byte[] readBuffer = new byte[16384];
                 while (true) {
                     final int bytesRead = inputStream.read(readBuffer);
                     if (bytesRead > 0) {
                         ostream.write(readBuffer, 0, bytesRead);
+                        L.i("", "Read bytes:" + bytesRead);
                     } else {
                         break;
                     }

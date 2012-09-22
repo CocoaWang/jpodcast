@@ -122,7 +122,7 @@ public class JPodcast extends TantalumMIDlet implements CommandListener {
                 L.i("", "Podcast select!");
                 // TODO Auto-generated method stub
                 app.manager.next(app.screen2);
-                startFetch("http://feeds.feedburner.com/TheVergeMobilePodcast");
+                startFetch("http://feeds2.feedburner.com/TheLinuxActionShow");
 
 
             }
@@ -143,7 +143,7 @@ public class JPodcast extends TantalumMIDlet implements CommandListener {
             fc.create();
             OutputStream os = fc.openOutputStream();
             final HttpStreamGetter httpGetter = new HttpStreamGetter(url, 
-                    5, os );
+                    0, os );
                         
                     
             Worker.fork(httpGetter);
