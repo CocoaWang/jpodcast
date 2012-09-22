@@ -6,12 +6,14 @@ package com.w;
 
 import com.futurice.tantalum3.TantalumMIDlet;
 import com.futurice.tantalum3.Task;
+import com.futurice.tantalum3.Worker;
 import com.futurice.tantalum3.log.L;
 import com.futurice.tantalum3.net.StaticWebCache;
 import com.futurice.tantalum3.net.xml.RSSItem;
 import com.futurice.tantalum3.net.xml.RSSModel;
 import com.futurice.tantalum3.rms.DataTypeHandler;
 import java.io.IOException;
+import java.io.OutputStream;
 import javax.microedition.io.Connector;
 import javax.microedition.io.file.FileConnection;
 import javax.microedition.lcdui.Command;
@@ -138,6 +140,13 @@ public class JPodcast extends TantalumMIDlet implements CommandListener {
         try {
             FileConnection fc = (FileConnection) Connector.open(trg, 
                     Connector.WRITE);
+            fc.create();
+            OutputStream os = fc.openOutputStream();
+            final HttpStreamGetter httpGetter = new HttpStreamGetter(url, 
+                    5, os );
+                        
+                    
+            Worker.fork(httpGetter);
         } catch (IOException e) {
             L.e("", "Cannot open file", e);
         }

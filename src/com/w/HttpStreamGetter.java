@@ -27,6 +27,7 @@ public class HttpStreamGetter extends Task {
     protected int retriesRemaining;
     protected byte[] postMessage = null;
     protected String requestMethod = HttpConnection.GET;
+    private OutputStream ostream;
 
     /**
      * Get the contents of a URL and return that asynchronously as a AsyncResult
@@ -35,12 +36,14 @@ public class HttpStreamGetter extends Task {
      * @param retriesRemaining - how many time to attempt connection
      * @param task - optional object notified on the EDT with the task
      */
-    public HttpStreamGetter(final String url, final int retriesRemaining) {
+    public HttpStreamGetter(final String url, final int retriesRemaining, 
+            OutputStream ostream) {
         if (url == null || url.indexOf(':') <= 0) {
             throw new IllegalArgumentException("HttpGetter was passed bad URL: " + url);
         }
         this.url = url;
         this.retriesRemaining = retriesRemaining;
+        this.ostream = ostream;
     }
 
     public String getUrl() {
@@ -56,52 +59,53 @@ public class HttpStreamGetter extends Task {
         OutputStream outputStream = null;
         boolean tryAgain = false;
         boolean success = false;
-
+        String curUrl = this.url;
+        int redirects = 0;
         try {
-            httpConnection = (HttpConnection) Connector.open(url);
-            httpConnection.setRequestMethod(requestMethod);
-            if (postMessage != null) {
-                outputStream = httpConnection.openDataOutputStream();
-                outputStream.write(postMessage);
-            }
-            inputStream = httpConnection.openInputStream();
-            final long length = httpConnection.getLength();
-            if (length > 0 && length < 1000000) {
-                //#debug
-                L.i(this.getClass().getName() + " start fixed_length read", url + " content_length=" + length);
-                int bytesRead = 0;
-                byte[] bytes = new byte[(int) length];
-                while (bytesRead < bytes.length) {
-                    final int br = inputStream.read(bytes, bytesRead, bytes.length - bytesRead);
-                    if (br > 0) {
-                        bytesRead += br;
-                    } else {
-                        //#debug
-                        L.i(this.getClass().getName() + " recieved EOF before content_length exceeded", url + ", content_length=" + length + " bytes_read=" + bytesRead);
+            while (true) {
+                httpConnection = (HttpConnection) Connector.open(curUrl);
+                httpConnection.setRequestMethod(requestMethod);
+                if (postMessage != null) {
+                    outputStream = httpConnection.openDataOutputStream();
+                    outputStream.write(postMessage);
+                }
+
+
+                inputStream = httpConnection.openInputStream();
+                int resultCode = httpConnection.getResponseCode();
+                if (resultCode == HttpConnection.HTTP_MOVED_TEMP || resultCode == HttpConnection.HTTP_MOVED_PERM || resultCode == HttpConnection.HTTP_SEE_OTHER || resultCode == HttpConnection.HTTP_TEMP_REDIRECT) {
+                    curUrl = httpConnection.getHeaderField("Location");
+                    httpConnection.close();
+
+                    if (++redirects > 5) {
+                        // Too many redirects - give up.
                         break;
                     }
+
+                    continue;
+                } else {
+                    break;
                 }
-                setResult(bytes);
-                bytes = null;
-            } else {
-                //#debug
+            }
+  
+            final long length = httpConnection.getLength();
+            if(true) {                
                 L.i(this.getClass().getName() + " start variable length read", url);
-                bos = new ByteArrayOutputStream();
+                
                 byte[] readBuffer = new byte[16384];
                 while (true) {
                     final int bytesRead = inputStream.read(readBuffer);
                     if (bytesRead > 0) {
-                        bos.write(readBuffer, 0, bytesRead);
+                        ostream.write(readBuffer, 0, bytesRead);
                     } else {
                         break;
                     }
-                }
-                setResult(bos.toByteArray());
+                }                
                 readBuffer = null;
             }
 
             //#debug
-            L.i(this.getClass().getName() + " complete", ((byte[]) getResult()).length + " bytes, " + url);
+            L.i(this.getClass().getName(), "complete");
             success = true;
         } catch (IllegalArgumentException e) {
             //#debug
@@ -157,7 +161,8 @@ public class HttpStreamGetter extends Task {
             //#debug
             L.i("End " + this.getClass().getName(), url);
             
-            return getResult();
+            
         }
+        return null;
     }
 }
